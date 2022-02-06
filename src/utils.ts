@@ -1,0 +1,33 @@
+import { errors } from 'faunadb'
+
+interface FaunaError {
+  code: string
+  description: string
+  status: number
+}
+
+export function getFaunaError(error: errors.FaunaHTTPError): FaunaError {
+  const { code, description } = error.requestResult.responseContent.errors[0]
+  let status
+
+  switch (code) {
+    case 'unauthorized':
+    case 'authentication failed':
+      status = 401
+      break
+    case 'permission denied':
+      status = 403
+      break
+    case 'instance not found':
+      status = 404
+      break
+    case 'instance not unique':
+    case 'contended transaction':
+      status = 409
+      break
+    default:
+      status = 500
+  }
+
+  return { code, description, status }
+}
